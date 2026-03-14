@@ -117,18 +117,19 @@ app.post('/generate-image', async (req, res) => {
 
     try {
         const response = await axios.post(
-            'https://router.huggingface.co/hf-inference/models/stabilityai/sd-turbo',
-            { inputs: prompt },
-            {
-                headers: {
-                    'Authorization': `Bearer ${process.env.HF_API_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Accept': 'image/png'
-                },
-                responseType: 'arraybuffer',
-                timeout: 60000
-            }
-        );
+  "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
+  { inputs: prompt },
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.HF_API_KEY}`,
+      "Content-Type": "application/json",
+      Accept: "image/png"
+    },
+    responseType: "arraybuffer",
+    timeout: 60000
+  }
+);
+
 
         // Check if response is JSON error instead of image
         const contentType = response.headers['content-type'];
