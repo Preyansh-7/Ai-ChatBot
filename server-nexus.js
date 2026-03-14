@@ -121,7 +121,7 @@ app.post('/generate-image', async (req, res) => {
             { inputs: prompt },
             {
                 headers: {
-                    'Authorization': `Bearer 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`,
+                    'Authorization': `Bearer ${process.env.HF_API_KEY}`,
                     'Content-Type': 'application/json'
                 },
                 responseType: 'arraybuffer',
