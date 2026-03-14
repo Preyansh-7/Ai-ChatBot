@@ -128,10 +128,28 @@ app.post('/generate-image', async (req, res) => {
                 timeout: 60000
             }
         );
+
+        // Check if response is JSON error instead of image
+        const contentType = response.headers['content-type'];
+        if (contentType && contentType.includes('application/json')) {
+            const errorMsg = JSON.parse(Buffer.from(response.data).toString());
+            console.error('HF returned error:', errorMsg);
+            return res.status(500).json({ error: errorMsg.error || 'HF error' });
+        }
+
         const base64 = Buffer.from(response.data).toString('base64');
         res.json({ image: `data:image/jpeg;base64,${base64}` });
+
     } catch (error) {
-        console.error('HF Error:', error.response?.data || error.message);
+        // Try to decode error buffer
+        if (error.response?.data) {
+            try {
+                const errMsg = JSON.parse(Buffer.from(error.response.data).toString());
+                console.error('HF Error details:', errMsg);
+                return res.status(500).json({ error: errMsg.error || 'Failed to generate image' });
+            } catch {}
+        }
+        console.error('HF Error:', error.message);
         res.status(500).json({ error: 'Failed to generate image' });
     }
 });
