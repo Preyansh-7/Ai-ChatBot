@@ -335,7 +335,7 @@ function scrollToBottom() {
     addImageLoadingToUI(loadingId);
 
     try {
-        const response = await fetch(`${API_URL.replace('/chat', '/generate-image')}`, {
+        const response = await fetch('https://ai-chatbot-i5zq.onrender.com/generate-image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt })
