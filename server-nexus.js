@@ -110,3 +110,28 @@ app.listen(PORT, () => {
     console.log(`🚀 Nexus AI Server running on port ${PORT}`);
     console.log(`📡 API endpoint: http://localhost:${PORT}/chat`);
 });
+
+app.post('/generate-image', async (req, res) => {
+    const { prompt } = req.body;
+    if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
+
+    try {
+        const response = await axios.post(
+            'https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0',
+            { inputs: prompt },
+            {
+                headers: {
+                    'Authorization': `Bearer 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`,
+                    'Content-Type': 'application/json'
+                },
+                responseType: 'arraybuffer',
+                timeout: 60000
+            }
+        );
+        const base64 = Buffer.from(response.data).toString('base64');
+        res.json({ image: `data:image/jpeg;base64,${base64}` });
+    } catch (error) {
+        console.error('HF Error:', error.response?.data || error.message);
+        res.status(500).json({ error: 'Failed to generate image' });
+    }
+});

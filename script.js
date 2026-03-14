@@ -317,14 +317,119 @@ function addMessageToUI(role, content, timestamp = new Date().toISOString(), id 
 function scrollToBottom() {
     el.chatMessages.scrollTop = el.chatMessages.scrollHeight;
 }
+    async function generateImage(prompt) {
+    if (el.welcomeScreen) el.welcomeScreen.classList.add('hidden');
+    if (!state.currentChatId || !state.conversations[state.currentChatId]) createNewChat();
 
+    const userMsgId = generateId();
+    addMessageToUI('user', `/image ${prompt}`, new Date().toISOString(), userMsgId);
+
+    const chat = state.conversations[state.currentChatId];
+    chat.messages.push({ id: userMsgId, role: 'user', content: `/image ${prompt}`, timestamp: new Date().toISOString() });
+    if (chat.messages.length === 1) {
+        chat.title = `🎨 ${prompt.substring(0, 25)}...`;
+        renderChatHistory();
+    }
+
+    const loadingId = generateId();
+    addImageLoadingToUI(loadingId);
+
+    try {
+        const response = await fetch(`${API_URL.replace('/chat', '/generate-image')}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt })
+        });
+        const data = await response.json();
+        if (!data.image) throw new Error('No image returned');
+        removeLoadingFromUI(loadingId);
+        const aiMsgId = generateId();
+        addImageMessageToUI(prompt, data.image, aiMsgId);
+        chat.messages.push({ id: aiMsgId, role: 'assistant', content: `🎨 ${prompt}`, timestamp: new Date().toISOString(), isImage: true });
+        saveToStorage();
+    } catch (error) {
+        removeLoadingFromUI(loadingId);
+        addMessageToUI('assistant', '❌ Failed to generate image. Please try again!', new Date().toISOString());
+    }
+}
+
+function addImageLoadingToUI(id) {
+    const div = document.createElement('div');
+    div.className = 'message assistant-message';
+    div.dataset.messageId = id;
+    div.innerHTML = `
+        <div class="message-avatar">🎨</div>
+        <div class="message-content-wrapper">
+            <div class="message-header"><span class="message-author">AI Artist</span></div>
+            <div class="message-content image-loading">
+                <div class="image-gen-loading">
+                    <div class="spinner"></div>
+                    <span>Generating your image... (may take 20-30 sec)</span>
+                </div>
+            </div>
+        </div>
+    `;
+    el.chatMessages.appendChild(div);
+    scrollToBottom();
+}
+
+function removeLoadingFromUI(id) {
+    document.querySelector(`[data-message-id="${id}"]`)?.remove();
+}
+
+function addImageMessageToUI(prompt, imageData, id) {
+    const div = document.createElement('div');
+    div.className = 'message assistant-message';
+    div.dataset.messageId = id;
+    div.innerHTML = `
+        <div class="message-avatar">🎨</div>
+        <div class="message-content-wrapper">
+            <div class="message-header">
+                <span class="message-author">AI Artist</span>
+                <span class="message-time">${formatTime(new Date().toISOString())}</span>
+            </div>
+            <div class="message-content image-message">
+                <p class="image-prompt-label">🎨 ${escapeHtml(prompt)}</p>
+                <img src="${imageData}" alt="${escapeHtml(prompt)}" class="generated-image" onclick="window.open('${imageData}')">
+                <div class="image-actions">
+                    <button class="message-action-btn" onclick="downloadImage('${id}')">⬇️ Download</button>
+                </div>
+            </div>
+        </div>
+    `;
+    el.chatMessages.appendChild(div);
+    scrollToBottom();
+}
+function downloadImage(msgId) {
+    const img = document.querySelector(`[data-message-id="${msgId}"] .generated-image`);
+    if (!img) return;
+    const a = document.createElement('a');
+    a.href = img.src;
+    a.download = 'ai-image.png';
+    a.click();
+}
+window.downloadImage = downloadImage;
 // ============================================
 // API COMMUNICATION
 // ============================================
 async function sendMessage() {
-    const message = el.messageInput.value.trim();
-    if (!message || state.isTyping) return;
+   
+        const message = el.messageInput.value.trim();
+if (!message || state.isTyping) return;
 
+// Handle /image command
+if (message.toLowerCase().startsWith('/image ')) {
+    const prompt = message.slice(7).trim();
+    if (!prompt) {
+        AuthModule.showToast('❌ Please add a prompt! e.g. /image a sunset', 'error');
+        return;
+    }
+    el.messageInput.value = '';
+    el.charCount.textContent = '0';
+    el.messageInput.style.height = 'auto';
+    generateImage(prompt);
+    return;
+}
     if (el.welcomeScreen) el.welcomeScreen.classList.add('hidden');
 
     if (!state.currentChatId || !state.conversations[state.currentChatId]) {
