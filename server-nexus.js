@@ -117,7 +117,7 @@ app.post('/generate-image', async (req, res) => {
 
     try {
         const response = await axios.post(
-            'https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0',
+            'https://router.huggingface.co/hf-inference/models/stabilityai/sd-turbo',
             { inputs: prompt },
             {
                 headers: {
@@ -139,7 +139,7 @@ app.post('/generate-image', async (req, res) => {
         }
 
         const base64 = Buffer.from(response.data).toString('base64');
-        res.json({ image: `data:image/jpeg;base64,${base64}` });
+        res.json({ image: `data:image/png;base64,${base64}` });
 
     } catch (error) {
         // Try to decode error buffer
