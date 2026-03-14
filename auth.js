@@ -132,7 +132,7 @@ const AuthModule = {
         const fallbackAvatar = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ccircle cx="50" cy="50" r="40" fill="%23ff69b4"/%3E%3Ctext x="50" y="65" font-size="40" text-anchor="middle" fill="white"%3E👤%3C/text%3E%3C/svg%3E';
         const photoURL = user.photoURL || fallbackAvatar;
         userProfile.innerHTML = `
-            <div class="user-avatar">
+            <div class="user-avatar" onclick="ProfileModule.open()">
                 <img src="${photoURL}" alt="Profile" onerror="this.src='${fallbackAvatar}'">
             </div>
             <div class="user-info">

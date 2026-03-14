@@ -821,12 +821,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Step 2: Core features
-    initMarkdown();
-    initTheme();
-    loadFromStorage();
-    setupEventListeners();
-    renderChatHistory();
+// Step 2: Core features
+initMarkdown();
+initTheme();
+loadFromStorage();
+setupEventListeners();
+ProfileModule.init();
+renderChatHistory();
 
     // Step 3: Load or create chat (only if not logged in — Firebase will handle logged-in case)
     if (typeof AuthModule === 'undefined' || !AuthModule.isLoggedIn()) {
