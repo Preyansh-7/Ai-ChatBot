@@ -285,5 +285,69 @@
     <script src="auth.js"></script>
     <!-- Main Script -->
     <script src="script.js"></script>
+    
+<!-- Profile Settings Modal -->
+<div class="modal hidden" id="profileModal">
+    <div class="modal-content profile-modal-content">
+        <div class="modal-header">
+            <h2>✨ Edit Profile</h2>
+            <button class="modal-close" id="closeProfile">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+
+            <!-- Avatar Section -->
+            <div class="profile-avatar-section">
+                <div class="profile-avatar-wrapper">
+                    <img id="profileAvatarPreview" src="" alt="Profile Picture">
+                    <label class="avatar-upload-btn" for="avatarFileInput" title="Change photo">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                    </label>
+                    <input type="file" id="avatarFileInput" accept="image/*" class="hidden">
+                </div>
+                <p class="avatar-hint">Click the camera icon to change your photo</p>
+            </div>
+
+            <!-- Display Name -->
+            <div class="setting-group">
+                <label>👤 Display Name</label>
+                <input type="text" id="profileName" placeholder="Your name">
+            </div>
+
+            <!-- Email (read-only) -->
+            <div class="setting-group">
+                <label>📧 Email <span class="readonly-badge">read-only</span></label>
+                <input type="text" id="profileEmail" disabled>
+            </div>
+
+            <!-- Divider -->
+            <div class="profile-divider">
+                <span>Change Password</span>
+            </div>
+
+            <!-- New Password -->
+            <div class="setting-group">
+                <label>🔒 New Password</label>
+                <input type="password" id="profileNewPassword" placeholder="Leave blank to keep current">
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="setting-group">
+                <label>🔒 Confirm Password</label>
+                <input type="password" id="profileConfirmPassword" placeholder="Repeat new password">
+            </div>
+
+            <!-- Save Button -->
+            <button class="auth-submit-btn" id="saveProfileBtn">💾 Save Changes</button>
+        </div>
+    </div>
+</div>
+    
 </body>
 </html>
