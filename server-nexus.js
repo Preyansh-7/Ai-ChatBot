@@ -122,7 +122,8 @@ app.post('/generate-image', async (req, res) => {
             {
                 headers: {
                     'Authorization': `Bearer ${process.env.HF_API_KEY}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'image/png'
                 },
                 responseType: 'arraybuffer',
                 timeout: 60000
