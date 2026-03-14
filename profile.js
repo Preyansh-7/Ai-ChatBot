@@ -88,13 +88,13 @@ const ProfileModule = {
             }
 
             // Update Firebase Auth profile
-            const updates = {};
-            if (newName !== user.displayName) updates.displayName = newName;
-            if (photoURL !== user.photoURL) updates.photoURL = photoURL;
+            // Update Firebase Auth profile (name only — base64 is too long for Auth)
+const updates = {};
+if (newName !== user.displayName) updates.displayName = newName;
 
-            if (Object.keys(updates).length > 0) {
-                await user.updateProfile(updates);
-            }
+if (Object.keys(updates).length > 0) {
+    await user.updateProfile(updates);
+}
 
             // Update password if provided
             if (newPassword) {
