@@ -187,9 +187,9 @@ function createNewChat() {
     saveToStorage();
     renderChatHistory();
     loadChat(chatId);
-}
+}   
 
-function loadChat(chatId) {
+async function loadChat(chatId) {
     state.currentChatId = chatId;
     saveToStorage();
     const chat = state.conversations[chatId];
@@ -197,7 +197,18 @@ function loadChat(chatId) {
     el.chatMessages.innerHTML = '';
     if (chat.messages.length > 0) {
         el.welcomeScreen?.classList.add('hidden');
-        chat.messages.forEach(msg => addMessageToUI(msg.role, msg.content, msg.timestamp, msg.id));
+        for (const msg of chat.messages) {
+    if (msg.isImage && msg.imageStorageId) {
+        const imageData = await loadImageFromFirestore(msg.imageStorageId);
+        if (imageData) {
+            addImageMessageToUI(msg.content.replace('🎨 ', ''), imageData, msg.id);
+        } else {
+            addMessageToUI(msg.role, msg.content, msg.timestamp, msg.id);
+        }
+    } else {
+        addMessageToUI(msg.role, msg.content, msg.timestamp, msg.id);
+    }
+}
     } else {
         el.welcomeScreen?.classList.remove('hidden');
     }
@@ -317,6 +328,43 @@ function addMessageToUI(role, content, timestamp = new Date().toISOString(), id 
 function scrollToBottom() {
     el.chatMessages.scrollTop = el.chatMessages.scrollHeight;
 }
+    async function saveImageToFirestore(base64Image, prompt) {
+    if (typeof AuthModule === 'undefined' || !AuthModule.isLoggedIn()) return null;
+    const user = AuthModule.getCurrentUser();
+    try {
+        const imagesRef = firebase.firestore()
+            .collection('users').doc(user.uid).collection('images');
+        const snapshot = await imagesRef.orderBy('createdAt', 'asc').get();
+        if (snapshot.size >= 10) {
+            await snapshot.docs[0].ref.delete();
+            console.log('🗑️ Deleted oldest image');
+        }
+        const docRef = await imagesRef.add({
+            image: base64Image,
+            prompt: prompt,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        console.log('✅ Image saved:', docRef.id);
+        return docRef.id;
+    } catch (error) {
+        console.error('Error saving image:', error);
+        return null;
+    }
+}
+
+async function loadImageFromFirestore(imageStorageId) {
+    if (!imageStorageId || typeof AuthModule === 'undefined' || !AuthModule.isLoggedIn()) return null;
+    const user = AuthModule.getCurrentUser();
+    try {
+        const doc = await firebase.firestore()
+            .collection('users').doc(user.uid)
+            .collection('images').doc(imageStorageId).get();
+        return doc.exists ? doc.data().image : null;
+    } catch (error) {
+        console.error('Error loading image:', error);
+        return null;
+    }
+}
     async function generateImage(prompt) {
     if (el.welcomeScreen) el.welcomeScreen.classList.add('hidden');
     if (!state.currentChatId || !state.conversations[state.currentChatId]) createNewChat();
@@ -345,8 +393,16 @@ function scrollToBottom() {
         removeLoadingFromUI(loadingId);
         const aiMsgId = generateId();
         addImageMessageToUI(prompt, data.image, aiMsgId);
-        chat.messages.push({ id: aiMsgId, role: 'assistant', content: `🎨 ${prompt}`, timestamp: new Date().toISOString(), isImage: true });
-        saveToStorage();
+        const imageStorageId = await saveImageToFirestore(data.image, prompt);
+    chat.messages.push({ 
+     id: aiMsgId, 
+    role: 'assistant', 
+    content: `🎨 ${prompt}`, 
+    timestamp: new Date().toISOString(), 
+    isImage: true,
+    imageStorageId: imageStorageId
+});
+saveToStorage();
     } catch (error) {
         removeLoadingFromUI(loadingId);
         addMessageToUI('assistant', '❌ Failed to generate image. Please try again!', new Date().toISOString());
