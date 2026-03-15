@@ -1661,3 +1661,51 @@ body {
     cursor: not-allowed;
     background: var(--bg-tertiary) !important;
 }
+
+/* ============================================
+   IMAGE GENERATION
+   ============================================ */
+.image-gen-loading {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    color: var(--text-secondary);
+    font-size: 0.9375rem;
+}
+
+.image-message {
+    padding: 1rem !important;
+}
+
+.image-prompt-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+    font-style: italic;
+}
+
+.generated-image {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform var(--transition-fast);
+    display: block;
+}
+
+.generated-image:hover {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-lg);
+}
+
+.image-actions {
+    margin-top: 0.75rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+[data-theme="pookie"] .generated-image {
+    border: 2px solid rgba(255, 182, 223, 0.4);
+    border-radius: 16px;
+}
