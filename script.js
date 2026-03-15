@@ -500,6 +500,7 @@ if (message.toLowerCase().startsWith('/image ')) {
     if (!chat.messages) chat.messages = [];
 
     chat.messages.push({ id: messageId, role: 'user', content: message, timestamp: new Date().toISOString() });
+    await saveChatToFirestore(state.currentChatId, state.conversations[state.currentChatId]);
 
     if (chat.messages.length === 1) {
         chat.title = message.substring(0, 30) + (message.length > 30 ? '...' : '');
@@ -541,7 +542,8 @@ if (message.toLowerCase().startsWith('/image ')) {
 
         addMessageToUI('assistant', data.response, new Date().toISOString(), aiMessageId);
         chat.messages.push({ id: aiMessageId, role: 'assistant', content: data.response, timestamp: new Date().toISOString() });
-        saveToStorage();
+saveToStorage();
+await saveChatToFirestore(state.currentChatId, state.conversations[state.currentChatId]);
 
     } catch (error) {
         console.error('Error:', error);
