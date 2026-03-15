@@ -17,7 +17,8 @@ function getGroqModelName(modelShortName) {
         'llama-3.3-70b-versatile': 'llama-3.3-70b-versatile',
         'llama-3.1-8b': 'llama-3.1-8b-instant',
         'llama-3.1-70b': 'llama-3.1-70b-versatile',
-        'gemma-7b': 'gemma2-9b-it'
+        'gemma-7b': 'gemma2-9b-it',
+        'deepseek-r1': 'deepseek-r1-distill-llama-70b',
     };
     return modelMap[modelShortName] || 'llama-3.3-70b-versatile';
 }
