@@ -544,7 +544,7 @@ if (message.toLowerCase().startsWith('/image ')) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 message,
-                model: 'llama-3.3-70b',
+                model: el.modelSelect.value,
                 history,
                 temperature: state.settings.temperature,
                 max_tokens: state.settings.maxTokens,
