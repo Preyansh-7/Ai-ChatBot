@@ -328,6 +328,21 @@ function addMessageToUI(role, content, timestamp = new Date().toISOString(), id 
 function scrollToBottom() {
     el.chatMessages.scrollTop = el.chatMessages.scrollHeight;
 }
+    function compressImage(base64Image, maxWidth = 512) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+            canvas.width = img.width * ratio;
+            canvas.height = img.height * ratio;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', 0.6)); // 60% quality JPEG
+        };
+        img.src = base64Image;
+    });
+}
     async function saveImageToFirestore(base64Image, prompt) {
     if (typeof AuthModule === 'undefined' || !AuthModule.isLoggedIn()) return null;
     const user = AuthModule.getCurrentUser();
@@ -339,8 +354,9 @@ function scrollToBottom() {
             await snapshot.docs[0].ref.delete();
             console.log('🗑️ Deleted oldest image');
         }
+        const compressed = await compressImage(base64Image);
         const docRef = await imagesRef.add({
-            image: base64Image,
+        image: compressed,
             prompt: prompt,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
