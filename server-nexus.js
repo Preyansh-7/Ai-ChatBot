@@ -106,7 +106,92 @@ app.get('/', (req, res) => {
 });
 
 app.head('/chat', (req, res) => res.status(200).end());
+app.post('/chat-stream', async (req, res) => {
+    const {
+        message,
+        history = [],
+        model = 'llama-3.3-70b',
+        temperature = 0.7,
+        max_tokens = 2000,
+        system_prompt = 'You are a helpful AI assistant.',
+    } = req.body;
 
+    if (!message || typeof message !== 'string' || message.trim() === '') {
+        return res.status(400).json({ error: 'Message is required' });
+    }
+
+    const apiKey = process.env.GROQ_API_KEY;
+
+    // Set headers for streaming
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    try {
+        const cleanHistory = history.map(msg => ({
+            role: msg.role === 'assistant' || msg.role === 'model' ? 'assistant' : 'user',
+            content: String(msg.content).substring(0, 4000)
+        }));
+
+        const messages = [
+            { role: 'system', content: system_prompt },
+            ...cleanHistory,
+            { role: 'user', content: message.substring(0, 4000) }
+        ];
+
+        const response = await axios.post(
+            'https://api.groq.com/openai/v1/chat/completions',
+            {
+                model: getGroqModelName(model),
+                messages,
+                temperature: Math.min(Math.max(parseFloat(temperature) || 0.7, 0), 1),
+                max_tokens: Math.min(parseInt(max_tokens) || 2000, 4000),
+                stream: true
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                responseType: 'stream'
+            }
+        );
+
+        response.data.on('data', (chunk) => {
+            const lines = chunk.toString().split('\n').filter(line => line.trim());
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    const data = line.slice(6);
+                    if (data === '[DONE]') {
+                        res.write('data: [DONE]\n\n');
+                        return;
+                    }
+                    try {
+                        const parsed = JSON.parse(data);
+                        const content = parsed.choices[0]?.delta?.content || '';
+                        if (content) {
+                            res.write(`data: ${JSON.stringify({ content })}\n\n`);
+                        }
+                    } catch {}
+                }
+            }
+        });
+
+        response.data.on('end', () => {
+            res.write('data: [DONE]\n\n');
+            res.end();
+        });
+
+        response.data.on('error', () => {
+            res.end();
+        });
+
+    } catch (error) {
+        console.error('Stream error:', error.message);
+        res.write(`data: ${JSON.stringify({ error: 'Stream failed' })}\n\n`);
+        res.end();
+    }
+});
 app.listen(PORT, () => {
     console.log(`🚀 Nexus AI Server running on port ${PORT}`);
     console.log(`📡 API endpoint: http://localhost:${PORT}/chat`);

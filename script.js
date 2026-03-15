@@ -533,34 +533,39 @@ if (message.toLowerCase().startsWith('/image ')) {
     el.sendBtn.querySelector('.loading-spinner').classList.remove('hidden');
 
     try {
-        const history = chat.messages.slice(0, -1).map(msg => ({
-            role: msg.role === 'user' ? 'user' : 'assistant',
-            content: msg.content
-        }));
+        try {
+    const history = chat.messages.slice(0, -1).map(msg => ({
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.content
+    }));
 
-        // FIX: use 'llama-3.3-70b' to match server modelMap key
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                message,
-                model: el.modelSelect.value,
-                history,
-                temperature: state.settings.temperature,
-                max_tokens: state.settings.maxTokens,
-                system_prompt: state.settings.systemPrompt
-            })
-        });
+    // FIX: use 'llama-3.3-70b' to match server modelMap key
+    const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            message,
+            model: el.modelSelect.value,
+            history,
+            temperature: state.settings.temperature,
+            max_tokens: state.settings.maxTokens,
+            system_prompt: state.settings.systemPrompt
+        })
+    });
 
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
-        const aiMessageId = generateId();
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const data = await response.json();
+    const aiMessageId = generateId();
 
-        addMessageToUI('assistant', data.response, new Date().toISOString(), aiMessageId);
-        chat.messages.push({ id: aiMessageId, role: 'assistant', content: data.response, timestamp: new Date().toISOString() });
-saveToStorage();
-await saveChatToFirestore(state.currentChatId, state.conversations[state.currentChatId]);
+    addMessageToUI('assistant', data.response, new Date().toISOString(), aiMessageId);
+    chat.messages.push({ id: aiMessageId, role: 'assistant', content: data.response, timestamp: new Date().toISOString() });
+    await saveChatToFirestore(state.currentChatId, state.conversations[state.currentChatId]);
+    saveToStorage();
 
+} catch (error) {
+    console.error('Error:', error);
+    addMessageToUI('assistant', '⚠️ Sorry, something went wrong. Please try again!', new Date().toISOString());
+}
     } catch (error) {
         console.error('Error:', error);
         addMessageToUI('assistant', '⚠️ Sorry, something went wrong. Please try again!', new Date().toISOString());
