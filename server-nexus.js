@@ -11,16 +11,28 @@ app.use(express.json());
 
 // FIX: added 'groq' and 'llama-3.3-70b' keys to match what the frontend sends
 function getGroqModelName(modelShortName) {
+    const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
+
     const modelMap = {
-        'groq': 'llama-3.3-70b-versatile',
-        'llama-3.3-70b': 'llama-3.3-70b-versatile',
-        'llama-3.3-70b-versatile': 'llama-3.3-70b-versatile',
+        groq: DEFAULT_MODEL,
+
+        // LLaMA models
+        'llama-3.3-70b': DEFAULT_MODEL,
+        'llama-3.3-70b-versatile': DEFAULT_MODEL,
         'llama-3.1-8b': 'llama-3.1-8b-instant',
         'llama-3.1-70b': 'llama-3.1-70b-versatile',
+
+        // Google Gemma
         'gemma-7b': 'gemma2-9b-it',
+
+        // DeepSeek
         'deepseek-r1': 'deepseek-r1-distill-llama-70b',
     };
-    return modelMap[modelShortName] || 'llama-3.3-70b-versatile';
+
+    // Normalize input (important!)
+    const key = modelShortName?.toLowerCase().trim();
+
+    return modelMap[key] || DEFAULT_MODEL;
 }
 
 async function callGroq(message, history, settings = {}) {
