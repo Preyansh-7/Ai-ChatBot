@@ -215,7 +215,7 @@ app.post('/generate-image', async (req, res) => {
 
     try {
         const response = await axios.post(
-  "https://router.huggingface.co/hf-inference/models/runwayml/stable-diffusion-v1-5",
+  "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell",
   { inputs: prompt },
   {
     headers: {
