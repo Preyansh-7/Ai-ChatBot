@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
+const { InferenceClient } = require('@huggingface/inference');
 require('dotenv').config();
 
 const app = express();
@@ -214,41 +215,19 @@ app.post('/generate-image', async (req, res) => {
     if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
 
     try {
-        const response = await axios.post(
-  "https://router.huggingface.co/nscale/black-forest-labs/FLUX.1-schnell",
-  { inputs: prompt },
-  {
-    headers: {
-      Authorization: `Bearer ${process.env.HF_API_KEY}`,
-      "Content-Type": "application/json",
-      Accept: "image/png"
-    },
-    responseType: "arraybuffer",
-    timeout: 60000
-  }
-);
+        const client = new InferenceClient(process.env.HF_API_KEY);
 
+        const imageBlob = await client.textToImage({
+            model: 'black-forest-labs/FLUX.1-schnell',
+            inputs: prompt,
+            provider: 'auto'
+        });
 
-        // Check if response is JSON error instead of image
-        const contentType = response.headers['content-type'];
-        if (contentType && contentType.includes('application/json')) {
-            const errorMsg = JSON.parse(Buffer.from(response.data).toString());
-            console.error('HF returned error:', errorMsg);
-            return res.status(500).json({ error: errorMsg.error || 'HF error' });
-        }
-
-        const base64 = Buffer.from(response.data).toString('base64');
+        const buffer = Buffer.from(await imageBlob.arrayBuffer());
+        const base64 = buffer.toString('base64');
         res.json({ image: `data:image/png;base64,${base64}` });
 
     } catch (error) {
-        // Try to decode error buffer
-        if (error.response?.data) {
-            try {
-                const errMsg = JSON.parse(Buffer.from(error.response.data).toString());
-                console.error('HF Error details:', errMsg);
-                return res.status(500).json({ error: errMsg.error || 'Failed to generate image' });
-            } catch {}
-        }
         console.error('HF Error:', error.message);
         res.status(500).json({ error: 'Failed to generate image' });
     }
